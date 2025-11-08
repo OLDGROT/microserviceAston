@@ -18,9 +18,17 @@ services:
     ports:
       - 8081:8080
     depends_on:
-      - config-service
-      - discovery-service
-      - kafka
+      config-service:
+         condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/users/getUsers" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - backend
 
@@ -29,7 +37,8 @@ services:
     ports:
       - 8082:8080
     depends_on:
-      - user-service
+      user-service:
+        condition: service_healthy
     networks:
       - backend
 
@@ -38,6 +47,11 @@ services:
     container_name: config-service
     ports:
       - 8083:8080
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/config/user-service" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - backend
 
@@ -46,6 +60,11 @@ services:
     container_name: discovery-service
     ports:
       - 8084:8080
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/getServices" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - backend
 
