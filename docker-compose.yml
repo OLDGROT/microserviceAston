@@ -22,10 +22,8 @@ services:
          condition: service_healthy
       discovery-service:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/users/getUsers" ]
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/users/getUsers || exit 0"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -39,6 +37,8 @@ services:
     depends_on:
       user-service:
         condition: service_healthy
+    environment:
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     networks:
       - backend
 
@@ -48,10 +48,10 @@ services:
     ports:
       - 8083:8080
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/config/user-service" ]
-      interval: 5s
+      test: ["CMD-SHELL", "curl -f http://localhost:8083/config/user-service || exit 0"]
+      interval: 2s
       timeout: 3s
-      retries: 10
+      retries: 100
     networks:
       - backend
 
@@ -61,10 +61,10 @@ services:
     ports:
       - 8084:8080
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/getServices" ]
-      interval: 5s
+      test: ["CMD-SHELL", "curl -f http://localhost:8084/get-services || exit 0"]
+      interval: 2s
       timeout: 3s
-      retries: 10
+      retries: 100
     networks:
       - backend
 
@@ -90,7 +90,9 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
     networks:
       - backend
 
